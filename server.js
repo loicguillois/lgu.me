@@ -1,3 +1,5 @@
+// TODO : config file + ping + 404 + check if exist (key + url) + use module pattern
+
 var http = require('http'),
     url = require("url"),
     sys = require('sys'),
@@ -16,16 +18,22 @@ var server = http.createServer(function (request, response) {
 }).listen(8124);
 
 function post(request, response) {
-  post_handler(request, function(request_data)
-    {
-response.writeHead(200, { 'Content-Type' : 'text/html' });
+  post_handler(request, function(request_data) {
+      response.writeHead(200, { 'Content-Type' : 'text/html' });
+      var uuid = createUUID(),
+          url = request_data.url;
+
+      var client = http.createClient(5984, "127.0.0.1");
+      var request = client.request("PUT", "/urls/"+uuid, {'Content-Type': 'application/json'});
+      request.write("{\"url\":\"" + url + "\"}");
+      request.end();
 
       response.write(
-		  'URL: <strong>' + request_data.url + '</strong><br />'+
-		  'Key: <strong>' + createUUID() + '</strong><br />'
+		  'URL: <strong>' + url + '</strong><br />'+
+		  'Key: <strong>' + uuid + '</strong><br />'
                 );
-		response.end();
-	    });
+      response.end();
+  });
 }
 
 function post_handler(request, callback)
@@ -50,9 +58,22 @@ function post_handler(request, callback)
 
 
 function redirect(request, response) {
-  response.writeHead(200, {'Content-Type': 'text/plain'});
+
   var uri = url.parse(request.url).pathname; 
-  response.end(uri+'\n');
+
+  var client = http.createClient(5984, "127.0.0.1");
+  var request = client.request("GET", "/urls"+uri);
+  request.end();
+
+request.on('response', function (resp) {
+  resp.setEncoding('utf8');
+  resp.on('data', function (chunk) {
+    response.writeHead(301, { 'Location': 'http://' + JSON.parse(chunk).url });
+    response.end();
+  });
+});
+
+
 }
 
 function createUUID() {
