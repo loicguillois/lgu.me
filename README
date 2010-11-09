@@ -1,0 +1,5 @@
+Usage:
+
+% node server.js
+
+then browse http://localhost:8124
