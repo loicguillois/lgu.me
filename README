@@ -1,5 +1,12 @@
-Usage:
+USAGE:
 
 % node server.js
 
 then browse http://localhost:8124
+
+TODO:
+
+- configuration file (port + couchdb port/address)
+- must check URL
+- manage 404 errors
+- must check if already exist (both key and url)

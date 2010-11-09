@@ -1,5 +1,3 @@
-// TODO : config file + ping + 404 + check if exist (key + url) + use module pattern
-
 var http = require('http'),
     url = require("url"),
     sys = require('sys'),
