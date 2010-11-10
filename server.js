@@ -19,18 +19,35 @@ function post(request, response) {
   post_handler(request, function(request_data) {
       response.writeHead(200, { 'Content-Type' : 'text/html' });
       var uuid = createUUID(),
-          url = request_data.url;
-
+          url = request_data.url,
+	  uuidNotExist = false;
+      
       var client = http.createClient(5984, "127.0.0.1");
-      var request = client.request("PUT", "/urls/"+uuid, {'Content-Type': 'application/json'});
-      request.write("{\"url\":\"" + url + "\"}");
-      request.end();
 
-      response.write(
-		  'URL: <strong>' + url + '</strong><br />'+
-		  'Key: <strong>' + uuid + '</strong><br />'
-                );
-      response.end();
+	  request = client.request("GET", "/urls/"+uuid);
+	  request.end();
+
+	request.on('response', function (resp) {
+	  resp.setEncoding('utf8');
+	  resp.on('data', function (chunk) {
+		if(JSON.parse(chunk).error == "not_found") {
+		      var request = client.request("PUT", "/urls/"+uuid, {'Content-Type': 'application/json'});
+		      request.write("{\"url\":\"" + url + "\"}");
+		      request.end();
+
+		      response.write(
+				  '<h1>Tiny URL was created!</h1>'+
+				  'The following URL:<p><strong>' + url + '</strong></p>'+
+				  'resulted in the following tiny URL: <p><strong>http://lgu.me/' + uuid + '</strong></p>'
+				);
+		      response.end();	
+		} else {
+			post(request, reponse);
+		}
+	  });
+      	});
+
+
   });
 }
 
